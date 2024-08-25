@@ -7,8 +7,8 @@ Code for paper [Chain-of-Table: Evolving Tables in the Reasoning Chain for Table
 ## Environment
 
 ```shell
-conda create --name cotable python=3.10 -y
-conda activate cotable
+conda create --name cotable-baml python=3.10 -y
+conda activate cotable-baml
 pip install -r requirements.txt 
 ```
 
