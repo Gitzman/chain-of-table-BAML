@@ -15,6 +15,8 @@
 
 import fire
 import os
+import dotenv
+dotenv.load_dotenv()
 
 from utils.load_data import load_tabfact_dataset
 from utils.llm import ChatGPT
