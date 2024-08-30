@@ -1,6 +1,10 @@
-# Chain of Table
+# Chain of Table BAML
+This repo upgrades the reference implementation of Chain of Table. In the original version, the prompts are dynamically built with string concats and new lines. Answers are parsed with regular expression and there is much confusing logic to handle the inconsistency of LLM outputs. 
 
-Code for paper [Chain-of-Table: Evolving Tables in the Reasoning Chain for Table Understanding](https://arxiv.org/abs/2401.04398)
+With BAML, these issues are solved. The expectation is this implementation will be much easier to read and more accurate due to the type safety guarantees of the BAML library.
+
+
+Code for original Chain of Table paper [Chain-of-Table: Evolving Tables in the Reasoning Chain for Table Understanding](https://arxiv.org/abs/2401.04398)
 
 *This is not an officially supported Google product.*
 
