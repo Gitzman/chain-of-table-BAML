@@ -27,7 +27,7 @@ from operations import *
 def main(
     dataset_path: str = "data/tabfact/test.jsonl",
     raw2clean_path: str ="data/tabfact/raw2clean.jsonl",
-    model_name: str = "gpt-3.5-turbo-16k-0613",
+    model_name: str = "gpt-4o-mini",
     result_dir: str = "results/tabfact",
     openai_api_key: str = None,
     first_n=-1,

@@ -337,12 +337,15 @@ def generate_prompt_for_next_step(
     llm_options=None,
     strategy="top",
 ):
+    # Get table information from the sample
     table_info = get_table_info(sample)
     act_chain = table_info["act_chain"]
 
+    # Debug printing of the action chain
     if debug:
         print("Act Chain: ", act_chain, flush=True)
 
+    # Separate kept and skipped actions from the action chain
     kept_act_chain = [x for x in act_chain if not x.startswith("skip")]
     kept_act_chain_str = " -> ".join(kept_act_chain)
     if kept_act_chain_str:
@@ -355,22 +358,28 @@ def generate_prompt_for_next_step(
         op_name = get_operation_name(op)
         skip_act_chain_op_names.append(op_name)
 
+    # Debug printing of kept and skipped action chains
     if debug:
         print("Kept Act Chain: ", kept_act_chain, flush=True)
         print("Skip Act Chain: ", skip_act_chain, flush=True)
 
+    # Determine the last operation and possible next operations
     last_operation = (
         "<init>" if not kept_act_chain else get_operation_name(kept_act_chain[-1])
     )
+
+    #Improving the possible_next_operation_dict logic is an opportunity to improve this algorithm
     possible_next_operations = possible_next_operation_dict[last_operation]
     possible_next_operations = [
         x for x in possible_next_operations if x not in skip_act_chain_op_names
     ]
 
+    # Debug printing of last operation and possible next operations
     if debug:
         print("Last Operation: ", last_operation, flush=True)
         print("Possible Next Operations: ", possible_next_operations, flush=True)
 
+    # If only one possible next operation, return it without further processing
     if len(possible_next_operations) == 1:
         log = {
             "act_chain": act_chain,
@@ -383,6 +392,7 @@ def generate_prompt_for_next_step(
         }
         return possible_next_operations[0], log
 
+    # Build the prompt for the language model
     prompt = ""
     for operation in possible_next_operations:
         if operation == "<END>":
@@ -407,11 +417,14 @@ def generate_prompt_for_next_step(
 
     prompt += "Function Chain: " + kept_act_chain_str
 
+    # Generate responses using the language model
     responses = llm.generate_plus_with_score(
         prompt, options=llm_options, end_str="\n\n"
     )
 
+    # Process the responses based on the chosen strategy
     if strategy == "top":
+        # Use the top-ranked response
         response = responses[0][0]
         generate_operations = get_all_operation_names(response)
         if debug:
@@ -424,6 +437,7 @@ def generate_prompt_for_next_step(
                 next_operation = operation
                 break
     elif strategy == "voting":
+        # Use a voting mechanism to determine the next operation
         next_operation_conf_dict = defaultdict(float)
         for response, score in responses:
             generate_operations = get_all_operation_names(response)
@@ -442,6 +456,7 @@ def generate_prompt_for_next_step(
         else:
             next_operation = "<END>"
 
+    # Prepare the log dictionary with relevant information
     log = {
         "act_chain": act_chain,
         "last_operation": last_operation,
@@ -453,7 +468,6 @@ def generate_prompt_for_next_step(
     }
 
     return next_operation, log
-
 
 def dynamic_chain_exec_one_sample(
     sample,
@@ -544,9 +558,13 @@ def dynamic_chain_exec_one_sample(
 
         table_info = get_table_info(current_sample)
 
-        current_sample = solver_func(
-            current_sample, table_info, llm=llm, llm_options=op_llm_options, **kargs
-        )
+        if solver_func == group_column_func:
+            current_sample = solver_func(current_sample, table_info)
+
+        else:
+            current_sample = solver_func(
+                current_sample, table_info, llm=llm, llm_options=op_llm_options, **kargs
+            )
     return current_sample, dynamic_chain_log
 
 
@@ -570,7 +588,7 @@ def dynamic_chain_exec_with_cache_for_loop(
         if os.path.exists(cache_path):
             _, proc_sample, log = pickle.load(open(cache_path, "rb"))
         else:
-            proc_sample, log = dynamic_chain_exec_one_sample(
+            proc_sample, log =  dynamic_chain_exec_one_sample(
                 sample, llm=llm, llm_options=llm_options, strategy=strategy
             )
             pickle.dump((sample, proc_sample, log), open(cache_path, "wb"))

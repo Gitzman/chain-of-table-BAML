@@ -47,6 +47,9 @@ def table2string(
         linear_table += line
     return linear_table
 
+def table2columns (table_text):
+    df = table2df(table_text, 2)
+    return df.columns.to_list()
 
 class NoIndent(object):
     """Value wrapper."""
