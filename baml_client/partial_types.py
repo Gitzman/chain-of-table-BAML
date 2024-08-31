@@ -33,3 +33,11 @@ class GroupColumnResult(BaseModel):
     
     explanation: Optional[str] = None
     group_column: Optional[str] = None
+
+class SortColumnResult(BaseModel):
+    
+    
+    sort_column: Optional[str] = None
+    sort_order: Optional[types.SortOrderEnum] = None
+    data_type: Optional[types.DataTypeEnum] = None
+    explanation: Optional[str] = None
