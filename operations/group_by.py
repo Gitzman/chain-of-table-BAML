@@ -20,7 +20,6 @@ dotenv.load_dotenv()
 from utils.helper import table2string
 from baml_client import b
 from baml_client.types import GroupColumnResult
-from utils.helper import table2string, table2columns
 import copy
 
 
