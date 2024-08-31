@@ -19,8 +19,27 @@ from pydantic import BaseModel, ConfigDict
 from typing import Dict, List, Optional, Union
 
 
+class DataTypeEnum(str, Enum):
+    
+    Numerical = "Numerical"
+    DateType = "DateType"
+    String = "String"
+
+class SortOrderEnum(str, Enum):
+    
+    Ascending = "Ascending"
+    Descending = "Descending"
+
 class GroupColumnResult(BaseModel):
     
     
     explanation: str
     group_column: str
+
+class SortColumnResult(BaseModel):
+    
+    
+    sort_column: str
+    sort_order: "SortOrderEnum"
+    data_type: "DataTypeEnum"
+    explanation: str

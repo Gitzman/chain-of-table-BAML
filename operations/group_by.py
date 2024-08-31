@@ -17,11 +17,9 @@ import numpy as np
 import dotenv
 dotenv.load_dotenv()
 
-
 from utils.helper import table2string
 from baml_client import b
 from baml_client.types import GroupColumnResult
-from utils.helper import table2string, table2columns
 import copy
 
 
@@ -38,7 +36,7 @@ def group_column_func(sample, table_info, debug=True, skip_op=[]):
     columns = table_text[0]
     
     # Call the BAML function
-    result = b.GroupColumn(table_text=table_str, statement=statement, columns=columns)
+    result: GroupColumnResult = b.GroupColumn(table_text=table_str, statement=statement, columns=columns)
 
     if debug:
         print("Input table:", table_str)
