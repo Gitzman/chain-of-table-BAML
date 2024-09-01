@@ -83,6 +83,30 @@ class BamlAsyncClient:
       mdl = create_model("GroupColumnReturnType", inner=(types.GroupColumnResult, ...))
       return coerce(mdl, raw.parsed())
     
+    async def SelectRows(
+        self,
+        table_text: str,statement: str,columns: List[str],
+        baml_options: BamlCallOptions = {},
+    ) -> types.SelectRowResult:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = await self.__runtime.call_function(
+        "SelectRows",
+        {
+          "table_text": table_text,"statement": statement,"columns": columns,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      mdl = create_model("SelectRowsReturnType", inner=(types.SelectRowResult, ...))
+      return coerce(mdl, raw.parsed())
+    
     async def SortColumn(
         self,
         table_text: str,statement: str,columns: List[str],
@@ -147,6 +171,41 @@ class BamlStreamClient:
       partial_mdl = create_model("GroupColumnPartialReturnType", inner=(partial_types.GroupColumnResult, ...))
 
       return baml_py.BamlStream[partial_types.GroupColumnResult, types.GroupColumnResult](
+        raw,
+        lambda x: coerce(partial_mdl, x),
+        lambda x: coerce(mdl, x),
+        self.__ctx_manager.get(),
+      )
+    
+    def SelectRows(
+        self,
+        table_text: str,statement: str,columns: List[str],
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlStream[partial_types.SelectRowResult, types.SelectRowResult]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function(
+        "SelectRows",
+        {
+          "table_text": table_text,
+          "statement": statement,
+          "columns": columns,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      mdl = create_model("SelectRowsReturnType", inner=(types.SelectRowResult, ...))
+      partial_mdl = create_model("SelectRowsPartialReturnType", inner=(partial_types.SelectRowResult, ...))
+
+      return baml_py.BamlStream[partial_types.SelectRowResult, types.SelectRowResult](
         raw,
         lambda x: coerce(partial_mdl, x),
         lambda x: coerce(mdl, x),

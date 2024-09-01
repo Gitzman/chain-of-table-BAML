@@ -34,6 +34,12 @@ class GroupColumnResult(BaseModel):
     explanation: Optional[str] = None
     group_column: Optional[str] = None
 
+class SelectRowResult(BaseModel):
+    
+    
+    explanation: Optional[str] = None
+    select_rows: List[Optional[int]]
+
 class SortColumnResult(BaseModel):
     
     
