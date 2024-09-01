@@ -54,7 +54,7 @@ def sort_column_func(sample, table_info, debug=False, skip_op=[]):
     table_caption = table_info.get("table_caption", "")
 
     # Convert table_text to string format expected by BAML function
-    table_str = table2string(table_text, caption=table_caption, num_rows=3).strip()
+    table_str = table2string(table_text, caption=table_caption, num_rows=10).strip()
     
     #Get Columns
     columns = table_text[0]

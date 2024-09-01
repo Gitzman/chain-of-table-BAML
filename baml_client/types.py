@@ -36,6 +36,12 @@ class GroupColumnResult(BaseModel):
     explanation: str
     group_column: str
 
+class SelectRowResult(BaseModel):
+    
+    
+    explanation: str
+    select_rows: List[int]
+
 class SortColumnResult(BaseModel):
     
     

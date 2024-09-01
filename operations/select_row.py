@@ -17,51 +17,41 @@ import copy
 import re
 import numpy as np
 from utils.helper import table2string
+import dotenv
+dotenv.load_dotenv()
 
-from third_party.select_column_row_prompts.select_column_row_prompts import select_row_demo
-
-
-def select_row_build_prompt(table_text, statement, table_caption=None, num_rows=100):
-    table_str = table2string(table_text, caption=table_caption).strip()
-    prompt = "/*\n" + table_str + "\n*/\n"
-    question = statement
-    prompt += "statement : " + question + "\n"
-    prompt += "explain :"
-    return prompt
+from baml_client import b
+from baml_client.types import SelectRowResult
 
 
 def select_row_func(sample, table_info, llm, llm_options=None, debug=False):
     table_text = table_info["table_text"]
-
-    table_caption = sample["table_caption"]
     statement = sample["statement"]
+    table_caption = sample.get("table_caption", "")
 
-    prompt = "" + select_row_demo.rstrip() + "\n\n"
-    prompt += select_row_build_prompt(table_text, statement, table_caption)
+     # Convert table_text to string format expected by BAML function
+    table_str = table2string(table_text, caption=table_caption).strip()
 
-    responses = llm.generate_plus_with_score(prompt, options=llm_options)
+    # Get Columns
+    columns = table_text[0]
+
+    # Call the BAML function
+    result: SelectRowResult = b.SelectRows(table_text=table_str, statement=statement, columns=columns)
 
     if debug:
-        print(responses)
+        print(result)
 
-    pattern_row = r"f_row\(\[(.*?)\]\)"
 
-    pred_conf_dict = {}
-    for res, score in responses:
-        try:
-            pred = re.findall(pattern_row, res, re.S)[0].strip()
-        except Exception:
-            continue
-        pred = pred.split(", ")
-        pred = [i.strip() for i in pred]
-        pred = [i.split(" ")[-1] for i in pred]
-        pred = sorted(pred)
-        pred = str(pred)
-        if pred not in pred_conf_dict:
-            pred_conf_dict[pred] = 0
-        pred_conf_dict[pred] += np.exp(score)
+    # Extract the results
+    select_rows = result.select_rows
+    explanation = result.explanation
 
-    select_row_rank = sorted(pred_conf_dict.items(), key=lambda x: x[1], reverse=True)
+    # Convert select_rows to the format expected by the rest of your code
+    pred = sorted(map(str, select_rows))
+    pred_str = str(pred)
+
+    # Create the parameter_and_conf list
+    select_row_rank = [(pred_str, 1.0)]  # Using 1.0 as confidence since BAML doesn't provide a score
 
     operation = {
         "operation_name": "select_row",
