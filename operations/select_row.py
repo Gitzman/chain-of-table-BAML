@@ -24,7 +24,7 @@ from baml_client import b
 from baml_client.types import SelectRowResult
 
 
-def select_row_func(sample, table_info, llm, llm_options=None, debug=False):
+def select_row_func(sample, table_info, debug=False):
     table_text = table_info["table_text"]
     statement = sample["statement"]
     table_caption = sample.get("table_caption", "")

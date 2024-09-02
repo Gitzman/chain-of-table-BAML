@@ -19,6 +19,9 @@ from pydantic import BaseModel, ConfigDict
 from typing import Dict, List, Optional, Union
 
 
+class Columns(str, Enum):
+    pass
+
 class DataTypeEnum(str, Enum):
     
     Numerical = "Numerical"
@@ -35,6 +38,12 @@ class GroupColumnResult(BaseModel):
     
     explanation: str
     group_column: str
+
+class SelectColumnResult(BaseModel):
+    
+    
+    explanation: str
+    select_columns: List[Union["Columns", str]]
 
 class SelectRowResult(BaseModel):
     

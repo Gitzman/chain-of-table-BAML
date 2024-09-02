@@ -19,17 +19,56 @@ from baml_py.type_builder import FieldType, TypeBuilder as _TypeBuilder, ClassPr
 class TypeBuilder(_TypeBuilder):
     def __init__(self):
         super().__init__(classes=set(
-          ["GroupColumnResult","SelectRowResult","SortColumnResult",]
+          ["GroupColumnResult","SelectColumnResult","SelectRowResult","SortColumnResult",]
         ), enums=set(
-          ["DataTypeEnum","SortOrderEnum",]
+          ["Columns","DataTypeEnum","SortOrderEnum",]
         ))
 
 
 
 
 
+    @property
+    def Columns(self) -> "ColumnsBuilder":
+        return ColumnsBuilder(self)
 
 
+
+
+
+class ColumnsBuilder:
+    def __init__(self, tb: _TypeBuilder):
+        self.__bldr = tb._tb.enum("Columns")
+        self.__values = set([])
+        self.__vals = ColumnsValues(self.__bldr, self.__values)
+
+    def type(self) -> FieldType:
+        return self.__bldr.field()
+
+    @property
+    def values(self) -> "ColumnsValues":
+        return self.__vals
+
+    def list_values(self) -> typing.List[typing.Tuple[str, EnumValueBuilder]]:
+        return [(name, self.__bldr.value(name)) for name in self.__values]
+
+    def add_value(self, name: str) -> EnumValueBuilder:
+        if name in self.__values:
+            raise ValueError(f"Value {name} already exists.")
+        self.__values.add(name)
+        return self.__bldr.value(name)
+
+class ColumnsValues:
+    def __init__(self, enum_bldr: EnumBuilder, values: typing.Set[str]):
+        self.__bldr = enum_bldr
+        self.__values = values
+
+    
+
+    def __getattr__(self, name: str) -> EnumValueBuilder:
+        if name not in self.__values:
+            raise AttributeError(f"Value {name} not found.")
+        return self.__bldr.value(name)
 
 
 __all__ = ["TypeBuilder"]

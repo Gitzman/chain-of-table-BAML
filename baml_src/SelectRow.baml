@@ -82,8 +82,6 @@ The answer is : f_row([5,4,1])
     */
     Statement: {{ statement }}
 
-    Provide step by step 
-
     {{ ctx.output_format }}
 
         Before you output the JSON, please explain your
