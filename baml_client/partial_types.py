@@ -34,6 +34,12 @@ class GroupColumnResult(BaseModel):
     explanation: Optional[str] = None
     group_column: Optional[str] = None
 
+class SelectColumnResult(BaseModel):
+    
+    
+    explanation: Optional[str] = None
+    select_columns: List[Optional[Union[types.Columns, str]]]
+
 class SelectRowResult(BaseModel):
     
     

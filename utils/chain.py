@@ -558,7 +558,7 @@ def dynamic_chain_exec_one_sample(
 
         table_info = get_table_info(current_sample)
 
-        if solver_func in [group_column_func, sort_column_func]:
+        if solver_func in [group_column_func, sort_column_func, select_row_func, select_column_func]:
             current_sample = solver_func(current_sample, table_info)
 
         else:

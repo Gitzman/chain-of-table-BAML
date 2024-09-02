@@ -17,9 +17,16 @@ import json
 import copy
 import re
 import numpy as np
-from utils.helper import table2df, NoIndent, MyEncoder
+from utils.helper import table2string, table2df, NoIndent, MyEncoder
 
 from third_party.select_column_row_prompts.select_column_row_prompts import select_column_demo
+
+import dotenv
+dotenv.load_dotenv()
+
+from baml_client.type_builder import TypeBuilder
+from baml_client import b
+from baml_client.types import SelectColumnResult
 
 
 def twoD_list_transpose(arr, keep_num_rows=3):
@@ -52,41 +59,39 @@ def select_column_build_prompt(table_text, statement, table_caption=None, num_ro
     return prompt
 
 
-def select_column_func(sample, table_info, llm, llm_options, debug=False, num_rows=100):
-    # table_info = get_table_info(sample)
+def select_column_func(sample, table_info, debug=False, num_rows=100):
     table_text = table_info["table_text"]
-
-    table_caption = sample["table_caption"]
     statement = sample["statement"]
+    table_caption = sample.get("table_caption", "")
 
-    prompt = "" + select_column_demo.rstrip() + "\n\n"
-    prompt += select_column_build_prompt(
-        table_text, statement, table_caption, num_rows=num_rows
-    )
+    # Convert table_text to string format expected by BAML function
+    table_str = table2string(table_text, caption=table_caption, num_rows=num_rows).strip()
+    
+    # Get Columns
+    columns = table_text[0]
 
-    responses = llm.generate_plus_with_score(prompt, options=llm_options)
+    # Set up the dynamic enum for Columns
+    tb = TypeBuilder()
+    for column in columns:
+        tb.Columns.add_value(column)
+
+
+    # Call the BAML function
+    result: SelectColumnResult = b.SelectColumns(table_text=table_str, statement=statement, columns=columns, baml_options={"tb": tb})
 
     if debug:
-        print(prompt)
-        print(responses)
+        print(result)
 
-    pattern_col = r"f_col\(\[(.*?)\]\)"
+    # Extract the results
+    select_columns = result.select_columns
+    explanation = result.explanation
 
-    pred_conf_dict = {}
-    for res, score in responses:
-        try:
-            pred = re.findall(pattern_col, res, re.S)[0].strip()
-        except Exception:
-            continue
-        pred = pred.split(", ")
-        pred = [i.strip() for i in pred]
-        pred = sorted(pred)
-        pred = str(pred)
-        if pred not in pred_conf_dict:
-            pred_conf_dict[pred] = 0
-        pred_conf_dict[pred] += np.exp(score)
+    # Convert select_columns to the format expected by the rest of your code
+    pred = sorted(select_columns)
+    pred_str = str(pred)
 
-    select_col_rank = sorted(pred_conf_dict.items(), key=lambda x: x[1], reverse=True)
+    # Create the parameter_and_conf list
+    select_col_rank = [(pred_str, 1.0)]  # Using 1.0 as confidence since BAML doesn't provide a score
 
     operation = {
         "operation_name": "select_column",
@@ -97,7 +102,6 @@ def select_column_func(sample, table_info, llm, llm_options, debug=False, num_ro
     sample_copy["chain"].append(operation)
 
     return sample_copy
-
 
 def select_column_act(table_info, operation, union_num=2, skip_op=[]):
     table_info = copy.deepcopy(table_info)
