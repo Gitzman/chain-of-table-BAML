@@ -62,8 +62,6 @@ Now, please analyze the following table and statement:
     Statement: {{ statement }}
     The existing columns are: {{ columns }}.
 
-    Provide step by step 
-
     {{ ctx.output_format }}
 
         {{ _.role("system") }}

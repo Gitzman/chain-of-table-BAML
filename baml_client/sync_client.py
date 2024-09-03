@@ -57,6 +57,30 @@ class BamlSyncClient:
       return self.__stream_client
 
     
+    def FinalQuery(
+        self,
+        table_text: str,statement: str,columns: List[str],
+        baml_options: BamlCallOptions = {},
+    ) -> types.FinalQueryResult:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.call_function_sync(
+        "FinalQuery",
+        {
+          "table_text": table_text,"statement": statement,"columns": columns,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      mdl = create_model("FinalQueryReturnType", inner=(types.FinalQueryResult, ...))
+      return coerce(mdl, raw.parsed())
+    
     def GroupColumn(
         self,
         table_text: str,statement: str,columns: List[str],
@@ -164,6 +188,41 @@ class BamlStreamClient:
       self.__runtime = runtime
       self.__ctx_manager = ctx_manager
 
+    
+    def FinalQuery(
+        self,
+        table_text: str,statement: str,columns: List[str],
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlSyncStream[partial_types.FinalQueryResult, types.FinalQueryResult]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function_sync(
+        "FinalQuery",
+        {
+          "table_text": table_text,
+          "statement": statement,
+          "columns": columns,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      mdl = create_model("FinalQueryReturnType", inner=(types.FinalQueryResult, ...))
+      partial_mdl = create_model("FinalQueryPartialReturnType", inner=(partial_types.FinalQueryResult, ...))
+
+      return baml_py.BamlSyncStream[partial_types.FinalQueryResult, types.FinalQueryResult](
+        raw,
+        lambda x: coerce(partial_mdl, x),
+        lambda x: coerce(mdl, x),
+        self.__ctx_manager.get(),
+      )
     
     def GroupColumn(
         self,

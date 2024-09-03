@@ -19,6 +19,11 @@ from pydantic import BaseModel, ConfigDict
 from typing import Dict, List, Optional, Union
 
 
+class Answers(str, Enum):
+    
+    TRUE = "TRUE"
+    FALSE = "FALSE"
+
 class Columns(str, Enum):
     pass
 
@@ -32,6 +37,12 @@ class SortOrderEnum(str, Enum):
     
     Ascending = "Ascending"
     Descending = "Descending"
+
+class FinalQueryResult(BaseModel):
+    
+    
+    explanation: str
+    answer: "Answers"
 
 class GroupColumnResult(BaseModel):
     
