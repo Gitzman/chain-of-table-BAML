@@ -28,6 +28,12 @@ from . import types
 ###############################################################################
 
 
+class FinalQueryResult(BaseModel):
+    
+    
+    explanation: Optional[str] = None
+    answer: Optional[types.Answers] = None
+
 class GroupColumnResult(BaseModel):
     
     
