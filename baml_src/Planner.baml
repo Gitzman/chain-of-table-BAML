@@ -9,11 +9,7 @@ class FunctionDemo{
 }
 
 enum Operation {
-  SELECT_COLUMN
-  SELECT_ROW
-  GROUP_COLUMN
-  SORT_BY
-  ADD_COLUMN
+  @@dynamic
   END
 }
 

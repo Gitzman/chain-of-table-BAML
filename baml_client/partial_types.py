@@ -50,7 +50,7 @@ class PlannerResult(BaseModel):
     
     
     explanation: Optional[str] = None
-    operationchain: List[Optional[types.Operation]]
+    operationchain: List[Optional[Union[types.Operation, str]]]
 
 class SelectColumnResult(BaseModel):
     

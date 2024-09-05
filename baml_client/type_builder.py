@@ -33,6 +33,11 @@ class TypeBuilder(_TypeBuilder):
         return ColumnsBuilder(self)
 
 
+    @property
+    def Operation(self) -> "OperationBuilder":
+        return OperationBuilder(self)
+
+
 
 
 
@@ -63,6 +68,45 @@ class ColumnsValues:
         self.__bldr = enum_bldr
         self.__values = values
 
+    
+
+    def __getattr__(self, name: str) -> EnumValueBuilder:
+        if name not in self.__values:
+            raise AttributeError(f"Value {name} not found.")
+        return self.__bldr.value(name)
+
+class OperationBuilder:
+    def __init__(self, tb: _TypeBuilder):
+        self.__bldr = tb._tb.enum("Operation")
+        self.__values = set([ "END", ])
+        self.__vals = OperationValues(self.__bldr, self.__values)
+
+    def type(self) -> FieldType:
+        return self.__bldr.field()
+
+    @property
+    def values(self) -> "OperationValues":
+        return self.__vals
+
+    def list_values(self) -> typing.List[typing.Tuple[str, EnumValueBuilder]]:
+        return [(name, self.__bldr.value(name)) for name in self.__values]
+
+    def add_value(self, name: str) -> EnumValueBuilder:
+        if name in self.__values:
+            raise ValueError(f"Value {name} already exists.")
+        self.__values.add(name)
+        return self.__bldr.value(name)
+
+class OperationValues:
+    def __init__(self, enum_bldr: EnumBuilder, values: typing.Set[str]):
+        self.__bldr = enum_bldr
+        self.__values = values
+
+    
+
+    @property
+    def END(self) -> EnumValueBuilder:
+        return self.__bldr.value("END")
     
 
     def __getattr__(self, name: str) -> EnumValueBuilder:

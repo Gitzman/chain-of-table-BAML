@@ -30,6 +30,7 @@ dotenv.load_dotenv()
 
 from baml_client import b
 from baml_client.types import PlannerResult
+from baml_client.type_builder import TypeBuilder
 
 
 def fixed_chain_exec_mp(llm, init_samples, fixed_op_list, n_proc=10, chunk_size=50):
@@ -334,8 +335,11 @@ def generate_prompt_for_next_step(
         "<init>" if not kept_act_chain else get_operation_name(kept_act_chain[-1])
     )
 
+
+
     #Improving the possible_next_operation_dict logic is an opportunity to improve this algorithm
     possible_next_operations = possible_next_operation_dict[last_operation]
+                             
     possible_next_operations = [
         x for x in possible_next_operations if x not in skip_act_chain_op_names
     ]
@@ -380,20 +384,27 @@ def generate_prompt_for_next_step(
         for op in possible_next_operations
     ]
 
+    tb = TypeBuilder()
+    for possible_next_operation in possible_next_operations:
+        tb.Operation.add_value(possible_next_operation)
+    
+
     # Call the BAML function
     result: PlannerResult = b.Planner(
         table_text=table_str, 
         statement=statement, 
         columns=columns, 
         operation_history=act_chain,
-        possible_next_operations=possible_next_operations_with_demos
+        possible_next_operations=possible_next_operations_with_demos,
+        baml_options={"tb": tb}
+
     )
 
     if debug:
         print(result)
 
     # Extract the results
-    next_operation = '<END>' if result.operationchain[0] == 'END' else result.operationchain[0].lower()
+    next_operation = '<END>' if 'END' in result.operationchain[0] else result.operationchain[0].lower()
 
     # Prepare the log dictionary with relevant information
     log = {
