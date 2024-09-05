@@ -33,6 +33,15 @@ class DataTypeEnum(str, Enum):
     DateType = "DateType"
     String = "String"
 
+class Operation(str, Enum):
+    
+    SELECT_COLUMN = "SELECT_COLUMN"
+    SELECT_ROW = "SELECT_ROW"
+    GROUP_COLUMN = "GROUP_COLUMN"
+    SORT_BY = "SORT_BY"
+    ADD_COLUMN = "ADD_COLUMN"
+    END = "END"
+
 class SortOrderEnum(str, Enum):
     
     Ascending = "Ascending"
@@ -44,11 +53,23 @@ class FinalQueryResult(BaseModel):
     explanation: str
     answer: "Answers"
 
+class FunctionDemo(BaseModel):
+    
+    
+    op: str
+    demo: str
+
 class GroupColumnResult(BaseModel):
     
     
     explanation: str
     group_column: str
+
+class PlannerResult(BaseModel):
+    
+    
+    explanation: str
+    operationchain: List["Operation"]
 
 class SelectColumnResult(BaseModel):
     

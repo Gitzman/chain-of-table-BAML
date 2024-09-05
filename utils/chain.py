@@ -25,6 +25,11 @@ import os
 import multiprocessing as mp
 
 from operations import *
+import dotenv
+dotenv.load_dotenv()
+
+from baml_client import b
+from baml_client.types import PlannerResult
 
 
 def fixed_chain_exec_mp(llm, init_samples, fixed_op_list, n_proc=10, chunk_size=50):
@@ -234,45 +239,6 @@ Statement: cd numancia placed in the last position.
 Function: f_sort_column(position)
 Explanation: The statement wants to check about cd numancia in the last position. We need to know the order of position from last to front. We sort the rows according to column "position"."""
 
-plan_full_demo_simple = """Here are examples of using the operations to tell whether the statement is True or False.
-
-/*
-col : date | division | league | regular season | playoffs | open cup | avg. attendance
-row 1 : 2001/01/02 | 2 | usl a-league | 4th, western | quarterfinals | did not qualify | 7,169
-row 2 : 2002/08/06 | 2 | usl a-league | 2nd, pacific | 1st round | did not qualify | 6,260
-row 5 : 2005/03/24 | 2 | usl first division | 5th | quarterfinals | 4th round | 6,028
-*/
-Statement: 2005 is the last year where this team was a part of the usl a-league?
-Function Chain: f_add_column(year) -> f_select_row(row 1, row 2) -> f_select_column(year, league) -> f_sort_column(year) -> <END>
-
-*/
-col : rank | lane | athlete | time
-row 1 : 1 | 6 | manjeet kaur (ind) | 52.17
-row 2 : 2 | 5 | olga tereshkova (kaz) | 51.86
-row 3 : 3 | 4 | pinki pramanik (ind) | 53.06
-*/
-Statement: There are 10 athletes from India.
-Function Chain: f_add_column(country of athletes) -> f_select_row(row 1, row 3) -> f_select_column(athlete, country of athletes) -> f_group_column(country of athletes) -> <END>
-
-/*
-col : week | when | kickoff | opponent | results; final score | results; team record | game site | attendance
-row 1 : 1 | saturday, april 13 | 7:00 p.m. | at rhein fire | w 27–21 | 1–0 | rheinstadion | 32,092
-row 2 : 2 | saturday, april 20 | 7:00 p.m. | london monarchs | w 37–3 | 2–0 | waldstadion | 34,186
-row 3 : 3 | sunday, april 28 | 6:00 p.m. | at barcelona dragons | w 33–29 | 3–0 | estadi olímpic de montjuïc | 17,503
-*/
-Statement: the competition with highest points scored is played on April 20.
-Function Chain: f_add_column(points scored) -> f_select_row(*) -> f_select_column(when, points scored) -> f_sort_column(points scored) -> <END>
-
-/*
-col : iso/iec standard | status | wg
-row 1 : iso/iec tr 19759 | published (2005) | 20
-row 2 : iso/iec 15288 | published (2008) | 7
-row 3 : iso/iec 12207 | published (2011) | 7
-*/
-Statement: 2 standards are published in 2011
-Function Chain: f_add_column(year) -> f_select_row(row 3) -> f_select_column(year) -> f_group_column(year) -> <END>
-
-Here are examples of using the operations to tell whether the statement is True or False."""
 
 possible_next_operation_dict = {
     "<init>": [
@@ -331,15 +297,15 @@ def get_all_operation_names(string):
 
 
 def generate_prompt_for_next_step(
-    sample,
-    debug=False,
-    llm=None,
-    llm_options=None,
-    strategy="top",
+    sample, 
+    debug
 ):
     # Get table information from the sample
     table_info = get_table_info(sample)
     act_chain = table_info["act_chain"]
+    table_text = table_info["table_text"]
+    statement = sample["statement"]
+    table_caption = sample.get("table_caption", "")
 
     # Debug printing of the action chain
     if debug:
@@ -393,77 +359,48 @@ def generate_prompt_for_next_step(
         return possible_next_operations[0], log
 
     # Build the prompt for the language model
-    prompt = ""
-    for operation in possible_next_operations:
-        if operation == "<END>":
-            continue
-        prompt += eval(f"plan_{operation}_demo") + "\n\n"
+    table_str = table2string(table_text, caption=table_caption).strip()
 
-    prompt += plan_full_demo_simple + "\n\n"
+    #Get Columns
+    columns = table_text[0]
 
-    prompt += "/*\n" + table2string(table_info["table_text"]) + "\n*/\n"
-    prompt += "Statement: " + sample["statement"] + "\n"
+    # Create the dictionary of operation demos
+    operation_demos = {
+        "select_column": eval("plan_select_column_demo"),
+        "select_row": eval("plan_select_row_demo"),
+        "group_column": eval("plan_group_column_demo"),
+        "sort_column": eval("plan_sort_column_demo"),
+        "add_column": eval("plan_add_column_demo"),
+        "<END>": "Indicate that no more operations are needed"
+    }
 
-    _possible_next_operations_str = " or ".join(
-        [f"f_{op}()" if op != "<END>" else op for op in possible_next_operations]
+ # Create the possible_next_operations list of dictionaries
+    possible_next_operations_with_demos = [
+        {"op": op, "demo": operation_demos[op]} 
+        for op in possible_next_operations
+    ]
+
+    # Call the BAML function
+    result: PlannerResult = b.Planner(
+        table_text=table_str, 
+        statement=statement, 
+        columns=columns, 
+        operation_history=act_chain,
+        possible_next_operations=possible_next_operations_with_demos
     )
 
-    if len(possible_next_operations) > 1:
-        prompt += (
-            f"The next operation must be one of {_possible_next_operations_str}.\n"
-        )
-    else:
-        prompt += f"The next operation must be {_possible_next_operations_str}.\n"
+    if debug:
+        print(result)
 
-    prompt += "Function Chain: " + kept_act_chain_str
-
-    # Generate responses using the language model
-    responses = llm.generate_plus_with_score(
-        prompt, options=llm_options, end_str="\n\n"
-    )
-
-    # Process the responses based on the chosen strategy
-    if strategy == "top":
-        # Use the top-ranked response
-        response = responses[0][0]
-        generate_operations = get_all_operation_names(response)
-        if debug:
-            print('Prompt:', prompt.split("\n\n")[-1])
-            print('Response:', response)
-            print("Generated Operations: ", generate_operations)
-        next_operation = "<END>"
-        for operation in generate_operations:
-            if operation in possible_next_operations:
-                next_operation = operation
-                break
-    elif strategy == "voting":
-        # Use a voting mechanism to determine the next operation
-        next_operation_conf_dict = defaultdict(float)
-        for response, score in responses:
-            generate_operations = get_all_operation_names(response)
-            next_operation = None
-            for operation in generate_operations:
-                if operation in possible_next_operations:
-                    next_operation = operation
-                    break
-            if next_operation:
-                next_operation_conf_dict[next_operation] += np.exp(score)
-        if len(next_operation_conf_dict) != 0:
-            next_operation_conf_pairs = sorted(
-                next_operation_conf_dict.items(), key=lambda x: x[1], reverse=True
-            )
-            next_operation = next_operation_conf_pairs[0][0]
-        else:
-            next_operation = "<END>"
+    # Extract the results
+    next_operation = '<END>' if result.operationchain[0] == 'END' else result.operationchain[0].lower()
 
     # Prepare the log dictionary with relevant information
     log = {
         "act_chain": act_chain,
         "last_operation": last_operation,
         "possible_next_operations": possible_next_operations,
-        "prompt": prompt,
-        "response": response,
-        "generate_operations": generate_operations,
+        "response": result,
         "next_operation": next_operation,
     }
 
@@ -539,10 +476,7 @@ def dynamic_chain_exec_one_sample(
     while True:
         # generate next operation
         next_operation, log = generate_prompt_for_next_step(
-            current_sample,
-            llm=llm,
-            llm_options=llm_options,
-            strategy=strategy,
+            sample = current_sample,
             debug=debug,
         )
         dynamic_chain_log.append(log)

@@ -34,11 +34,23 @@ class FinalQueryResult(BaseModel):
     explanation: Optional[str] = None
     answer: Optional[types.Answers] = None
 
+class FunctionDemo(BaseModel):
+    
+    
+    op: Optional[str] = None
+    demo: Optional[str] = None
+
 class GroupColumnResult(BaseModel):
     
     
     explanation: Optional[str] = None
     group_column: Optional[str] = None
+
+class PlannerResult(BaseModel):
+    
+    
+    explanation: Optional[str] = None
+    operationchain: List[Optional[types.Operation]]
 
 class SelectColumnResult(BaseModel):
     

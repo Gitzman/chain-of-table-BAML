@@ -107,6 +107,30 @@ class BamlAsyncClient:
       mdl = create_model("GroupColumnReturnType", inner=(types.GroupColumnResult, ...))
       return coerce(mdl, raw.parsed())
     
+    async def Planner(
+        self,
+        table_text: str,statement: str,columns: List[str],operation_history: List[str],possible_next_operations: List[types.FunctionDemo],
+        baml_options: BamlCallOptions = {},
+    ) -> types.PlannerResult:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = await self.__runtime.call_function(
+        "Planner",
+        {
+          "table_text": table_text,"statement": statement,"columns": columns,"operation_history": operation_history,"possible_next_operations": possible_next_operations,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      mdl = create_model("PlannerReturnType", inner=(types.PlannerResult, ...))
+      return coerce(mdl, raw.parsed())
+    
     async def SelectColumns(
         self,
         table_text: str,statement: str,columns: List[str],
@@ -254,6 +278,43 @@ class BamlStreamClient:
       partial_mdl = create_model("GroupColumnPartialReturnType", inner=(partial_types.GroupColumnResult, ...))
 
       return baml_py.BamlStream[partial_types.GroupColumnResult, types.GroupColumnResult](
+        raw,
+        lambda x: coerce(partial_mdl, x),
+        lambda x: coerce(mdl, x),
+        self.__ctx_manager.get(),
+      )
+    
+    def Planner(
+        self,
+        table_text: str,statement: str,columns: List[str],operation_history: List[str],possible_next_operations: List[types.FunctionDemo],
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlStream[partial_types.PlannerResult, types.PlannerResult]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function(
+        "Planner",
+        {
+          "table_text": table_text,
+          "statement": statement,
+          "columns": columns,
+          "operation_history": operation_history,
+          "possible_next_operations": possible_next_operations,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      mdl = create_model("PlannerReturnType", inner=(types.PlannerResult, ...))
+      partial_mdl = create_model("PlannerPartialReturnType", inner=(partial_types.PlannerResult, ...))
+
+      return baml_py.BamlStream[partial_types.PlannerResult, types.PlannerResult](
         raw,
         lambda x: coerce(partial_mdl, x),
         lambda x: coerce(mdl, x),

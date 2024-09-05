@@ -19,9 +19,9 @@ from baml_py.type_builder import FieldType, TypeBuilder as _TypeBuilder, ClassPr
 class TypeBuilder(_TypeBuilder):
     def __init__(self):
         super().__init__(classes=set(
-          ["FinalQueryResult","GroupColumnResult","SelectColumnResult","SelectRowResult","SortColumnResult",]
+          ["FinalQueryResult","FunctionDemo","GroupColumnResult","PlannerResult","SelectColumnResult","SelectRowResult","SortColumnResult",]
         ), enums=set(
-          ["Answers","Columns","DataTypeEnum","SortOrderEnum",]
+          ["Answers","Columns","DataTypeEnum","Operation","SortOrderEnum",]
         ))
 
 
