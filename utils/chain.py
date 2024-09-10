@@ -269,6 +269,7 @@ possible_next_operation_dict = {
     ],
     "group_column": [
         "sort_column",
+        "group_column"
         "<END>",
     ],
     "sort_column": [
@@ -370,19 +371,26 @@ def generate_prompt_for_next_step(
 
     # Create the dictionary of operation demos
     operation_demos = {
+        "add_column": eval("plan_add_column_demo"),
+         "select_row": eval("plan_select_row_demo"),
         "select_column": eval("plan_select_column_demo"),
-        "select_row": eval("plan_select_row_demo"),
         "group_column": eval("plan_group_column_demo"),
         "sort_column": eval("plan_sort_column_demo"),
-        "add_column": eval("plan_add_column_demo"),
         "<END>": "Indicate that no more operations are needed"
     }
 
- # Create the possible_next_operations list of dictionaries
-    possible_next_operations_with_demos = [
-        {"op": op, "demo": operation_demos[op]} 
-        for op in possible_next_operations
-    ]
+    # Create the possible_next_operations list of dictionaries
+    """    possible_next_operations_with_demos = [
+            {"op": op, "demo": operation_demos[op]} 
+            for op in possible_next_operations
+        ]"""
+    
+    possible_next_operations_with_demos = [{"op": "SELECT_COLUMN", "demo": "Select relevant columns from the table"},
+      {"op": "SELECT_ROW", "demo": "Select relevant rows from the table"},
+      {"op": "GROUP_BY", "demo": "Group the data by a specific column"},
+      {"op": "SORT_BY", "demo": "Sort the data by a specific column"},
+      {"op": "ADD_COLUMN", "demo": "Add a new column to the table"},
+      {"op": "END", "demo": "Indicate that no more operations are needed"}]
 
     tb = TypeBuilder()
     for possible_next_operation in possible_next_operations:

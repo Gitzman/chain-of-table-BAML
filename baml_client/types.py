@@ -63,6 +63,7 @@ class GroupColumnResult(BaseModel):
 class PlannerResult(BaseModel):
     
     
+    possible_statement_interpretations: List[str]
     explanation: str
     operationchain: List[Union["Operation", str]]
 

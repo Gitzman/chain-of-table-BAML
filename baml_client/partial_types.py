@@ -49,6 +49,7 @@ class GroupColumnResult(BaseModel):
 class PlannerResult(BaseModel):
     
     
+    possible_statement_interpretations: List[Optional[str]]
     explanation: Optional[str] = None
     operationchain: List[Optional[Union[types.Operation, str]]]
 
