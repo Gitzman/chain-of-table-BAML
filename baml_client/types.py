@@ -33,6 +33,10 @@ class DataTypeEnum(str, Enum):
     DateType = "DateType"
     String = "String"
 
+class Operation(str, Enum):
+    
+    END = "END"
+
 class SortOrderEnum(str, Enum):
     
     Ascending = "Ascending"
@@ -44,11 +48,24 @@ class FinalQueryResult(BaseModel):
     explanation: str
     answer: "Answers"
 
+class FunctionDemo(BaseModel):
+    
+    
+    op: str
+    demo: str
+
 class GroupColumnResult(BaseModel):
     
     
     explanation: str
     group_column: str
+
+class PlannerResult(BaseModel):
+    
+    
+    possible_statement_interpretations: List[str]
+    explanation: str
+    operationchain: List[Union["Operation", str]]
 
 class SelectColumnResult(BaseModel):
     

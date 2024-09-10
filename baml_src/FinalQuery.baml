@@ -73,12 +73,16 @@ The anwser is: TRUE
     Statement: {{ statement }}
     The existing columns are: {{ columns }}.
 
+    Reread the statement and think of all possible interpretations of it: {{ statement }} 
+
+    From the possible interpretations of "{{statement}}", select the most likely for your plan
+
     {{ ctx.output_format }}
 
     {{ _.role("system") }}
 
-        Before you output the JSON, please explain your
-    reasoning step-by-step. Here is an example on how to do this:
+            Before you output the JSON, reflect on if your plan will solve to understand the truth of the statement.  Please explain your 
+    reasoning step-by-step. Here is an example of how to do this:
     'If we think step by step we can see that ...
      therefore the output JSON is:
     {
