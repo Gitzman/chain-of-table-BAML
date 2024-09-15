@@ -8,6 +8,14 @@ client<llm> GPT4o {
   }
 }
 
+client<llm> GPT4o1 {
+  provider openai
+  options {
+    model "o1-mini"
+    api_key env.OPENAI_API_KEY
+  }
+}
+
 client<llm> Claude {
   provider anthropic
   options {
