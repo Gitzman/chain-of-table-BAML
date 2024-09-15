@@ -21,7 +21,7 @@ function Planner(table_text: string,
                 columns: string[], 
                 operation_history: string[], 
                 possible_next_operations: FunctionDemo[]) -> PlannerResult {
-  client GPT4o
+  client GPT4o1
   prompt #"
     {{ _.role("system") }}
   You are an AI assistant skilled in analyzing tables and determining the most appropriate next step in a chain of operations to verify statements about the table data.
